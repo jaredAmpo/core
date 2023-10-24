@@ -18,7 +18,7 @@ jobs:
     if: github.repository_owner == 'jaredAmpo'
     runs-on: ubuntu-latest
     outputs:
-      architectures: ${{ steps.info.outputs.architectures }}
+      architectures: "aarch64"
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
@@ -161,6 +161,19 @@ jobs:
 
             python -m script.gen_requirements_all
           fi
+
+      - name: Adjustments for armhf
+        if: matrix.arch == 'armhf'
+        run: |
+          # Pandas has issues building on armhf, it is expected they
+          # will drop the platform in the near future (they consider it
+          # "flimsy" on 386). The following packages depend on pandas,
+          # so we comment them out.
+          sed -i "s|env-canada|# env-canada|g" requirements_all.txt
+          sed -i "s|noaa-coops|# noaa-coops|g" requirements_all.txt
+          sed -i "s|pyezviz|# pyezviz|g" requirements_all.txt
+          sed -i "s|pykrakenapi|# pykrakenapi|g" requirements_all.txt
+
       - name: Write meta info file
         shell: bash
         run: |
